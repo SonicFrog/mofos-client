@@ -1,0 +1,1 @@
+: foreach *.proto |> protoc-c --c_out=. %f |> %B.pb-c.c %B.pb-c.h

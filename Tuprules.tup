@@ -1,0 +1,4 @@
+.gitignore
+
+!cc = |> cc @(CFLAGS) -c %f -o %o |> %B.o
+!link = |> cc %f -o %o @(LDFLAGS)  |> mofosc

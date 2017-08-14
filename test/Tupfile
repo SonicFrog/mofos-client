@@ -1,0 +1,9 @@
+include_rules
+
+ifeq (@(CONFIG_TEST),y)
+
+: foreach *.c | *.h ../config.h ../src/*.h |> !cc -I. -I.. -I../src |>
+: ../src/mofos.o ../src/ssl.o *.o |> !link |>
+: mofosc |> ./%f |>
+
+endif

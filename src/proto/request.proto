@@ -1,0 +1,139 @@
+syntax = "proto2";
+
+enum AuthResponseStatus {
+    AUTH_UNKNOWN = 0;
+    AUTH_SUCCESS = 1;
+    AUTH_FAILURE = 2;
+}
+
+enum FSResponseStatus {
+    RESP_SUCCESS = 0;
+    RESP_NOPERM = 1;
+    RESP_NOTFOUND = 2;
+    RESP_EOF = 3;
+    RESP_EBIG = 4;
+    RESP_OTHER = 5;
+}
+
+enum FSCompressionType {
+    COMP_NONE = 0;
+    COMP_GZIP = 1;
+    COMP_LZO = 2;
+    COMP_LZMA = 3;
+}
+
+enum FSReqRespType {
+    TYPE_READ = 0;
+    TYPE_READDIR = 1;
+    TYPE_WRITE = 2;
+    TYPE_ATTR = 3;
+    TYPE_CREATE = 4;
+    TYPE_UNLINK = 5;
+}
+
+message FSMessage {
+    oneof msg {
+        FSRequest request = 1;
+        FSResponse response = 2;
+    }
+}
+
+message FSRequest {
+    required uint32 id = 1;
+    required FSReqRespType type = 3;
+
+    oneof request {
+        FSReaddirRequest readdir = 4;
+        FSReadRequest read = 5;
+        FSWriteRequest write = 6;
+        FSGetAttrRequest getattr = 7;
+        FSCreateRequest create = 8;
+        FSUnlinkRequest unlink = 9;
+    }
+}
+
+message FSReaddirRequest {
+    required string path = 10;
+    optional bool hidden = 11 [ default = false ];
+    optional uint32 limit = 12 [ default = 0 ];
+    optional uint32 offset = 13 [ default = 0 ];
+}
+
+message FSReadRequest {
+    required string path = 20;
+    optional int64 offset = 21 [ default = 0 ];
+    required int64 size = 22;
+}
+
+message FSWriteRequest {
+    required string path = 30;
+    optional int64 offset = 31 [ default = 0 ];
+    required bytes data = 32;
+}
+
+message FSGetAttrRequest {
+    required string path = 40;
+}
+
+message FSCreateRequest {
+    required string path = 50;
+    optional int32 flags = 51;
+}
+
+message FSUnlinkRequest {
+    required string path = 60;
+    optional bool recursive = 91 [ default = false ];
+}
+
+message FSResponse {
+    required uint32 id = 1;
+    optional FSResponseStatus status = 2 [ default = RESP_SUCCESS ];
+    required FSReqRespType type = 3;
+
+    oneof response {
+        FSReadResponse read = 4;
+        FSReaddirResponse readdir = 5;
+        FSWriteResponse write = 6;
+        FSGetAttrResponse getattr = 7;
+        FSCreateResponse create = 8;
+        FSUnlinkResponse delete = 9;
+    }
+}
+
+message FSCreateResponse {
+    
+}
+
+message FSUnlinkResponse {
+    
+}
+
+message FSReadResponse {
+    required int64 size = 50;
+    required int64 offset = 51;
+    required bytes content = 52;
+}
+
+message FSWriteResponse {
+    required int64 written = 10;
+}
+
+message FSGetAttrResponse {
+    required FSFileInfo attr = 20;
+}
+
+message FSFileInfo {
+    required string name = 30;
+    required int64 size = 31;
+    required FSPermInfo perms = 32;
+}
+
+message FSReaddirResponse {
+    repeated FSFileInfo files = 40;
+}
+
+message FSPermInfo {
+     optional bool writtable = 1 [ default = true ];
+     optional bool readable = 2 [ default = true ];
+     optional bool executable = 3 [ default = true ];
+}
