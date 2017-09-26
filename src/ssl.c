@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
@@ -9,10 +10,11 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-#include <openssl/ssl.h>
+#include <openssl/evp.h>
 #include <openssl/x509.h>
 #include <openssl/pem.h>
 #include <openssl/rand.h>
+#include <openssl/ssl.h>
 
 #include <assert.h>
 #include "debug.h"
@@ -23,16 +25,16 @@
 static int hash_bytes(unsigned char *buffer, size_t buflen)
 {
     const EVP_MD* md = EVP_get_digestbyname(CERTIFICATE_DIGEST);
-    EVP_MD_CTX ctx;
+    EVP_MD_CTX *ctx = EVP_MD_CTX_new();
     unsigned int hbtes;
 
-    EVP_MD_CTX_init(&ctx);
+	assert(ctx);
 
-    EVP_DigestInit(&ctx, md);
-    EVP_DigestUpdate(&ctx, buffer, buflen);
-    EVP_DigestFinal_ex(&ctx, buffer, &hbtes);
+	EVP_DigestInit(ctx, md);
+    EVP_DigestUpdate(ctx, buffer, buflen);
+    EVP_DigestFinal_ex(ctx, buffer, &hbtes);
 
-    EVP_MD_CTX_destroy(&ctx);
+    EVP_MD_CTX_destroy(ctx);
 
     return hbtes;
 }
@@ -64,12 +66,9 @@ static int dtls_generate_cookie(SSL* ssl, unsigned char* cookie,
 }
 
 
-static int dtls_cookie_verify(SSL* ssl, unsigned char* cookie,
+static int dtls_cookie_verify(SSL* ssl, const unsigned char* cookie,
                               UNUSED unsigned int clen)
 {
-    const EVP_MD* md = EVP_get_digestbyname(CERTIFICATE_DIGEST);
-    EVP_MD_CTX ctx;
-
     return 0;
 }
 
@@ -127,9 +126,7 @@ static int client_ssh_style_verification(UNUSED int preverif, X509_STORE_CTX *st
     }
 
     const EVP_MD* md = EVP_get_digestbyname(CERTIFICATE_DIGEST);
-    EVP_MD_CTX mdctx;
-
-    EVP_MD_CTX_init(&mdctx);
+    EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
 
     if (md == NULL)
     {
@@ -137,10 +134,10 @@ static int client_ssh_style_verification(UNUSED int preverif, X509_STORE_CTX *st
         return 0;
     }
 
-    EVP_DigestInit(&mdctx, md);
-    EVP_DigestUpdate(&mdctx, buffer, read);
-    EVP_DigestFinal_ex(&mdctx, digest_bytes, &md_len);
-    EVP_MD_CTX_cleanup(&mdctx);
+    EVP_DigestInit(mdctx, md);
+    EVP_DigestUpdate(mdctx, buffer, read);
+    EVP_DigestFinal_ex(mdctx, digest_bytes, &md_len);
+    EVP_MD_CTX_destroy(mdctx);
 
     debug("Certificate has fingerprint: ");
 
@@ -363,21 +360,21 @@ int dtls_server_loop(struct dtls_params* params, server_loop_handler_t handler)
 {
     unsigned char buffer[4096];
     handler_status_t status = PERM_ERROR;
-    struct sockaddr_in client_addr;
+    BIO_ADDR* client_addr = BIO_ADDR_new();
     int rc = 0;
 
     debug("server starting up...\n");
 
     do
     {
-        while((rc = DTLSv1_listen(params->ssl, &client_addr)) < 1)
+        while((rc = DTLSv1_listen(params->ssl, client_addr)) < 1)
         {
             if (dtls_handle_error(params->ssl, rc) < 0)
                 return -1;
         }
 
-        debug("connection from %s:%d\n", inet_ntoa(client_addr.sin_addr),
-              ntohs(client_addr.sin_port));
+        debug("connection from %s:%s\n", BIO_ADDR_hostname_string(client_addr, 1),
+              BIO_ADDR_service_string(client_addr, 1));
 
         int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -414,10 +411,16 @@ int dtls_server_loop(struct dtls_params* params, server_loop_handler_t handler)
                 ssl_print_error("SSL_read");
                 continue;
             }
+			else
+			{
+				debug("Read %d bytes from client\n", read);
+			}
 
-            status = handler(params, client_addr, dtls_data_sender, buffer, read);
+            //status = handler(params, client_addr, dtls_data_sender, buffer, read);
         } while(status != PERM_ERROR && status != EXIT);
     } while(status != EXIT && status != PERM_ERROR);
+
+	BIO_ADDR_free(client_addr);
 
     debug("exiting server after %s\n", status == EXIT ? "exit" : "error");
 

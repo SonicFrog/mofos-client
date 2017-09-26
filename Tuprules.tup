@@ -1,4 +1,8 @@
 .gitignore
 
-!cc = |> cc @(CFLAGS) -c %f -o %o |> %B.o
-!link = |> cc %f -o %o @(LDFLAGS)  |> mofosc
+CFLAGS += -D_FILE_OFFSET_BITS=64
+CFLAGS += -Wall -Wextra -Wno-unused-parameter
+LDFLAGS += -lssl -lcrypto -pthread -lfuse
+
+!cc = |> cc $(CFLAGS) -c %f -o %o |> %B.o
+!link = |> cc %f -o %o $(LDFLAGS)  |> mofosc

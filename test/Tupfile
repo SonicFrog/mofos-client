@@ -1,6 +1,8 @@
 include_rules
 
-ifeq (@(CONFIG_TEST),y)
+ifeq ($(CONFIG_TEST),y)
+
+LDFLAGS += -lcunit
 
 : foreach *.c | *.h ../config.h ../src/*.h |> !cc -I. -I.. -I../src |>
 : ../src/mofos.o ../src/ssl.o *.o |> !link |>

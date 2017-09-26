@@ -22,6 +22,21 @@ void parse_args(int* argc, char** argv);
 void signal_setup();
 void handle_signal(int sig);
 
+const char* sig_name_str(int sig)
+{
+	switch (sig)
+	{
+#define CASE_RETURN_STRING(sig) case sig: return #sig
+
+		CASE_RETURN_STRING(SIGTERM);
+		CASE_RETURN_STRING(SIGINT);
+		CASE_RETURN_STRING(SIGUSR1);
+		CASE_RETURN_STRING(SIGHUP);
+
+#undef CASE_RETURN_STRING
+	}
+}
+
 void usage(const char *progname)
 {
     fprintf(stderr, "Usage: %s <target> <destintation>\n", progname);
@@ -76,7 +91,7 @@ void signal_setup()
 
 void handle_signal(int sig)
 {
-    const char* sig_name;
+    const char* sig_name = sig_name_str(sig);
     sigset_t pending;
 
     switch (sig)
@@ -90,6 +105,6 @@ void handle_signal(int sig)
         break;
 
     default:
-        fatal("Caught wrong signal: %d\n", sig);
+        fatal("Caught wrong signal: %s\n", sig_name);
     }
 }
