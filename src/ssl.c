@@ -62,7 +62,7 @@ static int dtls_generate_cookie(SSL* ssl, unsigned char* cookie,
 
     *cookie_len = hash_bytes(cookie, sz);
 
-    return 1;
+    return 0;
 }
 
 
@@ -171,6 +171,8 @@ int dtls_init(struct dtls_params *params, const char* keyname)
     int rc;
     char buffer[4096];
 
+	assert(keyname != NULL);
+
     params->ctx = SSL_CTX_new(DTLSv1_method());
 
     if (params->ctx == NULL)
@@ -190,14 +192,14 @@ int dtls_init(struct dtls_params *params, const char* keyname)
     SSL_CTX_set_options(params->ctx, SSL_OP_COOKIE_EXCHANGE);
     SSL_CTX_set_verify(params->ctx, SSL_VERIFY_NONE, NULL);
 
-    snprintf(buffer, 4096, "%s.key", keyname);
+    snprintf(buffer, 4096, "%s.pem", keyname);
 
     rc = SSL_CTX_use_PrivateKey_file(params->ctx, buffer, SSL_FILETYPE_PEM);
 
     if (1 != rc)
     {
         ssl_print_error("unable to load private key");
-        return -1;
+		fatal("tried loading %s\n", buffer);
     }
 
     snprintf(buffer, 4096, "%s.crt", keyname);
@@ -207,6 +209,7 @@ int dtls_init(struct dtls_params *params, const char* keyname)
     if (1 != rc)
     {
         ssl_print_error("unable to load certificate");
+		fatal("tried loading %s\n", buffer);
     }
 
     rc = SSL_CTX_check_private_key(params->ctx);
@@ -329,7 +332,7 @@ int dtls_init_client(struct dtls_params* params, const char* address, const int 
         return -1;
     }
 
-    BIO_ctrl(params->bio, BIO_CTRL_DGRAM_SET_CONNECTED, 0, &params->laddr);
+    BIO_ctrl(params->bio, BIO_CTRL_DGRAM_SET_CONNECTED, 1, &params->laddr);
 
     SSL_set_bio(params->ssl, params->bio, params->bio);
     SSL_set_connect_state(params->ssl);

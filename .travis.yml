@@ -3,7 +3,7 @@ sudo: required
 dist: zesty
 
 before_install:
-  - sudo apt-get install git openssl libssl-dev libfuse-dev protobuf-compiler libprotobuf-dev pkg-config kmod
+  - sudo apt-get install git openssl libssl-dev libfuse-dev protobuf-c-compiler libprotobuf-dev pkg-config kmod
   - sudo modprobe fuse
   - sudo chmod 666 /dev/fuse
   - sudo chown root:$USER /etc/fuse.conf
@@ -11,7 +11,5 @@ before_install:
   - (cd tup && ./bootstrap.sh)
   - sudo cp tup/tup /usr/bin/tup
   - rm -rf tup
-  - tup variant test.config
 
-script:
-  - tup test
+script: ./build.sh test

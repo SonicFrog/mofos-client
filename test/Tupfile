@@ -5,7 +5,14 @@ ifeq ($(CONFIG_TEST),y)
 LDFLAGS += -lcunit
 
 : foreach *.c | *.h ../config.h ../src/*.h |> !cc -I. -I.. -I../src |>
-: ../src/mofos.o ../src/ssl.o *.o |> !link |>
-: mofosc |> ./%f |>
+: ../src/mofos.o ../src/ssl.o *.o |> !link |> mofos-test
+
+: |> !genkey  |> server.key
+: server.key |> !decrypt_key |> %B.pem
+: server.pem |> !gencert |> server.crt
+: |> !genkey |> client.key
+: client.key |> !decrypt_key |> client.pem
+: client.pem |> !gencert |> client.crt
+: mofos-test | client.crt client.pem server.pem server.crt |> ./%f |>
 
 endif

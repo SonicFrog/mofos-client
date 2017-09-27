@@ -1,8 +1,14 @@
 .gitignore
 
+PASS=test
+SSL_ARGS=-outform PEM -x509 -nodes -subj "/CN=US/"
+
 CFLAGS += -D_FILE_OFFSET_BITS=64
 CFLAGS += -Wall -Wextra -Wno-unused-parameter
 LDFLAGS += -lssl -lcrypto -pthread -lfuse
 
 !cc = |> cc $(CFLAGS) -c %f -o %o |> %B.o
-!link = |> cc %f -o %o $(LDFLAGS)  |> mofosc
+!link = |> cc %f -o %o $(LDFLAGS)  |>
+!genkey = |> openssl genrsa -aes128 -passout pass:$(PASS) -out %o |> %B.key
+!decrypt_key = |> openssl rsa -passin pass:$(PASS) -in %f -out %o |> %B.pem
+!gencert = |> openssl req -key %f -out %o $(SSL_ARGS) |> %B.crt
