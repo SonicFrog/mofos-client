@@ -3,9 +3,17 @@
 PASS=test
 SSL_ARGS=-outform PEM -x509 -nodes -subj "/CN=US/"
 
-CFLAGS += -D_FILE_OFFSET_BITS=64
-CFLAGS += -Wall -Wextra -Wno-unused-parameter
-LDFLAGS += -lssl -lcrypto -pthread -lfuse
+CFLAGS += -D_FILE_OFFSET_BITS=64 -std=gnu99
+CFLAGS += -Wall -Wextra
+LDFLAGS += -lssl -lcrypto -pthread -lfuse -lprotobuf-c
+
+ifeq ($(CONFIG_TEST),y)
+CFLAGS += -g
+endif
+
+ifeq ($(CONFIG_TEST),n)
+CFLAGS += -DNDEBUG
+endif
 
 !cc = |> cc $(CFLAGS) -c %f -o %o |> %B.o
 !link = |> cc %f -o %o $(LDFLAGS)  |>

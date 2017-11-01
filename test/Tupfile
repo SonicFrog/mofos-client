@@ -2,6 +2,7 @@ include_rules
 
 ifeq ($(CONFIG_TEST),y)
 
+CFLAGS += -g
 LDFLAGS += -lcunit
 
 : foreach *.c | *.h ../config.h ../src/*.h |> !cc -I. -I.. -I../src |>

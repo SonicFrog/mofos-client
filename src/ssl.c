@@ -28,9 +28,9 @@ static int hash_bytes(unsigned char *buffer, size_t buflen)
     EVP_MD_CTX *ctx = EVP_MD_CTX_new();
     unsigned int hbtes;
 
-	assert(ctx);
+    assert(ctx);
 
-	EVP_DigestInit(ctx, md);
+    EVP_DigestInit(ctx, md);
     EVP_DigestUpdate(ctx, buffer, buflen);
     EVP_DigestFinal_ex(ctx, buffer, &hbtes);
 
@@ -72,39 +72,48 @@ static int dtls_cookie_verify(SSL* ssl, const unsigned char* cookie,
     return 0;
 }
 
-static inline int dtls_handle_error(SSL* ssl, const int rc)
+static dtls_bio_read_Wrapper(struct dtls_params *params, void *bytes, int len)
 {
-    {
-        if (rc == 0)
-            switch (SSL_get_error(ssl, rc))
-            {
-            case SSL_ERROR_SYSCALL:
-                print_errno("DTLSv1_listen");
-                break;
+    return BIO_read(params->bio, bytes, len);
+}
 
-            default:
-                ssl_print_error("DTLSv1_listen");
-            }
-        else // rc = -1 indicates SSL fatal error
+static dtls_bio_write_wrapper(struct dtls_params *params, const void *bytes, int len)
+{
+    return BIO_write(params->bio, bytes, len);
+}
+
+static inline int _dtls_handle_error(SSL* ssl, const int rc, const char* function, int line)
+{
+    if (rc == 0)
+        switch (SSL_get_error(ssl, rc))
         {
-            ssl_print_error("DTLSv1_listen fatal");
-            switch (SSL_get_error(ssl, rc))
-            {
-            case SSL_ERROR_SSL:
-                ERR_print_errors_fp(stderr);
-                break;
+        case SSL_ERROR_SYSCALL:
+            print_errno("%s:%d", function, line);
+            break;
 
-            case SSL_ERROR_SYSCALL:
-                print_errno("DTLSv1_listen");
-                break;
-            }
-            return -1;
+        default:
+            ssl_print_error("%s:%d", function, line);
         }
+    else // rc = -1 indicates SSL fatal error
+    {
+        ssl_print_error("%s:%d fatal", function, line);
+        switch (SSL_get_error(ssl, rc))
+        {
+        case SSL_ERROR_SSL:
+            ERR_print_errors_fp(stderr);
+            break;
+
+        case SSL_ERROR_SYSCALL:
+            print_errno("%s", function);
+            break;
+        }
+        return -1;
     }
+
     return 0;
 }
 
-static int client_ssh_style_verification(UNUSED int preverif, X509_STORE_CTX *store)
+UNUSED static int client_ssh_style_verification(UNUSED int preverif, X509_STORE_CTX *store)
 {
     unsigned char key_bytes[EVP_MAX_KEY_LENGTH], digest_bytes[EVP_MAX_MD_SIZE];
     int err = X509_STORE_CTX_get_error(store);
@@ -171,7 +180,7 @@ int dtls_init(struct dtls_params *params, const char* keyname)
     int rc;
     char buffer[4096];
 
-	assert(keyname != NULL);
+    assert(keyname != NULL);
 
     params->ctx = SSL_CTX_new(DTLSv1_method());
 
@@ -199,7 +208,7 @@ int dtls_init(struct dtls_params *params, const char* keyname)
     if (1 != rc)
     {
         ssl_print_error("unable to load private key");
-		fatal("tried loading %s\n", buffer);
+        fatal("tried loading %s\n", buffer);
     }
 
     snprintf(buffer, 4096, "%s.crt", keyname);
@@ -209,7 +218,7 @@ int dtls_init(struct dtls_params *params, const char* keyname)
     if (1 != rc)
     {
         ssl_print_error("unable to load certificate");
-		fatal("tried loading %s\n", buffer);
+        fatal("tried loading %s\n", buffer);
     }
 
     rc = SSL_CTX_check_private_key(params->ctx);
@@ -414,16 +423,16 @@ int dtls_server_loop(struct dtls_params* params, server_loop_handler_t handler)
                 ssl_print_error("SSL_read");
                 continue;
             }
-			else
-			{
-				debug("Read %d bytes from client\n", read);
-			}
+            else
+            {
+                debug("Read %d bytes from client\n", read);
+            }
 
             //status = handler(params, client_addr, dtls_data_sender, buffer, read);
         } while(status != PERM_ERROR && status != EXIT);
     } while(status != EXIT && status != PERM_ERROR);
 
-	BIO_ADDR_free(client_addr);
+    BIO_ADDR_free(client_addr);
 
     debug("exiting server after %s\n", status == EXIT ? "exit" : "error");
 
@@ -480,6 +489,4 @@ void dtls_free(struct dtls_params* params)
 
     if (params->ssl != NULL)
         SSL_free(params->ssl);
-
-    close(params->sockfd);
 }
