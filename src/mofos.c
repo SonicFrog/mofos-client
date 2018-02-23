@@ -1,5 +1,3 @@
-#define _GNU_SOURCE
-
 #include <assert.h>
 #include <ctype.h>
 #include <endian.h>
@@ -17,13 +15,16 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "config.h"
+#include "request.h"
 #include "mofos.h"
 #include "debug.h"
+#include "gnutls.h"
 
-int mofos_open(const char *path, struct fuse_file_info* fi)
+static int
+mofos_open(const char *path, __attribute__((unused)) struct fuse_file_info* fi)
 {
     debug("Opening file %s\n", path);
-    assert(fi != NULL);
 
     if (strncmp(path, "/me", 4) == 0)
     {
@@ -33,8 +34,9 @@ int mofos_open(const char *path, struct fuse_file_info* fi)
     return -ENOENT;
 }
 
-int mofos_read(const char* path, char* buf, size_t size, off_t offset,
-               struct fuse_file_info* fi)
+static int
+mofos_read(const char* path, char* buf, size_t size, off_t offset,
+	   __attribute__((unused)) struct fuse_file_info* fi)
 {
     const char* content = "Hello world!";
     debug("Read %zd bytes from %s at offset %ld\n", size, path, offset);
@@ -46,8 +48,9 @@ int mofos_read(const char* path, char* buf, size_t size, off_t offset,
 }
 
 
-int mofos_readdir(const char* path, void* callback_data, fuse_fill_dir_t callback,
-                  off_t offset, struct fuse_file_info* fi)
+static int
+mofos_readdir(const char* path, void* callback_data, fuse_fill_dir_t callback,
+              off_t offset, struct fuse_file_info* fi)
 {
     struct stat curr;
     debug("Reading directory %s\n", path);
@@ -65,24 +68,31 @@ int mofos_readdir(const char* path, void* callback_data, fuse_fill_dir_t callbac
     return 0;
 }
 
-int mofos_write(const char* path, const char* buf, size_t size, off_t offset,
-                struct fuse_file_info* fi)
+static int
+mofos_write(const char* path, const char* buf, size_t size, off_t offset,
+	    __attribute__((unused)) struct fuse_file_info* fi)
 {
     debug("Writing %zu bytes to file %s at offset %ld", size, path, offset);
     debug("Data written first byte: %c\n", buf[0]);
-    assert(fi != NULL);
 
-    return -1;
+    int rc = 0;
+
+    if (rc < 0) {
+        fatal("failed to create write request: %s\n", strerror(errno));
+    }
+
+    return rc;
 }
 
-int mofos_getattr(const char* path, struct stat* st)
+static int
+mofos_getattr(const char* path, struct stat* st)
 {
     mode_t mode = S_IRWXU | S_IRWXG | S_IRWXO;
 
     debug("Getting file attribute for %s\n", path);
 
-    st->st_uid = 1000;
-    st->st_gid = 1000;
+    st->st_uid = geteuid();
+    st->st_gid = getegid();
 
     if (strncmp(path, "/", 2) == 0)
     {
@@ -100,10 +110,31 @@ int mofos_getattr(const char* path, struct stat* st)
     return -ENOENT;
 }
 
-struct fuse_operations fops = {
+const struct fuse_operations fops = {
     .open = mofos_open,
     .read = mofos_read,
     .write = mofos_write,
     .getattr = mofos_getattr,
     .readdir = mofos_readdir,
 };
+
+int mofos_client_main_loop(struct mofos_config *config, int argc, char** argv)
+{
+    struct fuse_args args = FUSE_ARGS_INIT(argc - 1, argv + 1);
+    const char* host = mofos_config_get_remote_host(config);
+    struct mofos_dtls_client* client = NULL;
+
+    if (fuse_opt_parse(&args, NULL, NULL, 0) != 0) {
+        return EXIT_FAILURE;
+    }
+
+    client = mofos_dtls_client_new(host, "22");
+
+    if (!client)
+    {
+        fatal("unable to connect to server: %s", strerror(errno));
+        return -1;
+    }
+
+    return fuse_main(args.argc, args.argv, &fops, client);
+}

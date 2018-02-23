@@ -1,0 +1,59 @@
+#!/bin/sh
+
+usage() {
+    printf "$1 [opts ...] [user@][remote host][:port] [mountpoint]"
+}
+
+get_value() {
+
+}
+
+if [[ $# -lt 3 ]]; then
+    usage $0
+    exit 1
+fi
+
+readonly USERNAME=`whoami`
+
+if [[ -z "$USERNAME" ]]; then
+    printf "couldn't determine your username\n" 2>&1
+    exit 1
+fi
+
+
+if [[ ! -x `which ssh` ]]; then
+    printf "unable to locate ssh!\n" 2>&1
+    exit 2
+fi
+
+ENC=
+
+
+for arg in $*; do
+    case $arg in
+        --encryption)
+            ENC=true
+            ;;
+
+        --verbose)
+            VERBOSE=true
+            ;;
+
+        --*)
+            printf "unknown arg: $arg, skipping...\n" 2>&1
+            ;;
+    esac
+done
+
+
+readonly REMOTE_HOST=$1
+readonly MOUNTPOINT=$2
+
+SERV_INFO=`ssh $REMOTE_HOST mofos-server \
+               --encryption $ENC --username $USERNAME`
+
+
+PORT=`echo $SERV_INFO | grep port | cut -d: -f2 | tr -d "[[:space:]]"`
+PASSWORD=`echo $SERV_INFO | grep pass | cut -d: -f2 | tr -d "[[:space:]]"`
+
+mofos-client --port $PORT --username $USERNAME --password $PASSWORD

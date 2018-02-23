@@ -1,22 +1,23 @@
 .gitignore
 
-PASS=test
-SSL_ARGS=-outform PEM -x509 -nodes -subj "/CN=US/"
+ifdef CC
+CC = @(CC)
+else
+CC = cc
+endif
 
-CFLAGS += -D_FILE_OFFSET_BITS=64 -std=gnu99
-CFLAGS += -Wall -Wextra
-LDFLAGS += -lssl -lcrypto -pthread -lfuse -lprotobuf-c
+CFLAGS += -D_FILE_OFFSET_BITS=64 -std=c11 -D_GNU_SOURCE
+CFLAGS += -Wall -Wextra -fdiagnostics-color=always
+CFLAGS += -Wno-unused-parameter -Wmissing-prototypes
+CFLAGS += --warn-unused-result
+LDFLAGS += -pthread -lfuse -lprotobuf-c -lgnutls
 
 ifeq ($(CONFIG_TEST),y)
 CFLAGS += -g
-endif
-
-ifeq ($(CONFIG_TEST),n)
+else
 CFLAGS += -DNDEBUG
 endif
 
-!cc = |> cc $(CFLAGS) -c %f -o %o |> %B.o
-!link = |> cc %f -o %o $(LDFLAGS)  |>
-!genkey = |> openssl genrsa -aes128 -passout pass:$(PASS) -out %o |> %B.key
-!decrypt_key = |> openssl rsa -passin pass:$(PASS) -in %f -out %o |> %B.pem
-!gencert = |> openssl req -key %f -out %o $(SSL_ARGS) |> %B.crt
+!cc = |> ^ CC %f ^ cc $(CFLAGS) -c %f -o %o |> %B.o
+!link = |> ^ LINK %o ^ cc %f -o %o $(LDFLAGS)  |>
+!link_lib = |> ^ LD %o ^ cc %f -o %o.so $(LDFLAGS) -shared |>

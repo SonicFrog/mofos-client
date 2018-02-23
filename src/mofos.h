@@ -1,5 +1,4 @@
-#ifndef __DEF_FUSE_H
-#define __DEF_FUSE_H
+#pragma once
 
 #define FUSE_USE_VERSION 26
 
@@ -7,6 +6,7 @@
 
 #include <fuse.h>
 
-extern struct fuse_operations fops;
+extern const struct fuse_operations fops;
 
-#endif
+int
+mofos_client_main_loop(struct mofos_config *config, int argc, char** argv);

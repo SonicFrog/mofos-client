@@ -1,25 +1,53 @@
-#ifndef __DEF_DEBUG_H
-#define __DEF_DEBUG_H
+#ifndef __MOFOS_DEBUG_H
+#define __MOFOS_DEBUG_H
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <errno.h>
 
-#define print(level, fmt, ...) fprintf(stderr, level " %s:%d " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
-#define warn(fmt, ...) print("WARN", fmt, ##__VA_ARGS__)
-#define fatal(fmt, ...) print("FATAL", fmt, ##__VA_ARGS__); exit(1)
+#include "compiler.h"
+
+enum log_level {
+    LOG_LEVEL_MIN = 0,
+    LOG_LEVEL_DEBUG = 1,
+    LOG_LEVEL_WARN = 2,
+    LOG_LEVEL_ERROR = 3,
+    LOG_LEVEL_FATAL = 4,
+    LOG_LEVEL_MAX = 5,
+};
+
+typedef int (*mofos_printer) (int fd, const char* format, ...);
+
+void mofos_log_msg(enum log_level level, const char* file,
+		   const int line, const char* function,
+		   const char* fmt, ...);
+
+void mofos_log_msg_va(enum log_level level, const char* file,
+                      const int line, const char* function,
+                      const char* fmt, va_list ap);
+
+void mofos_log_set_level(enum log_level lv);
+
+#define mofos_strerror() "unknown error"
+
+
+#define print(level, fmt, ...) mofos_log_msg(level, __FILE__, __LINE__, \
+					     __FUNCTION__, fmt, ##__VA_ARGS__)
+
+#define warn(fmt, ...) print(LOG_LEVEL_WARN, fmt, ##__VA_ARGS__)
+#define error(fmt, ...) print(LOG_LEVEL_ERROR, fmt, ##__VA_ARGS__)
+#define fatal(fmt, ...) print(LOG_LEVEL_FATAL, fmt, ##__VA_ARGS__); abort()
 
 #ifndef NDEBUG
-#define debug(fmt, ...) print("DEBUG", fmt, ##__VA_ARGS__)
-#define debug_multiprint(fmt, ...) print("", fmt, ##__VA_ARGS__)
+#define debug(fmt, ...) print(LOG_LEVEL_DEBUG, fmt, ##__VA_ARGS__)
 #else
 #define debug(fmt, ...)
 #endif
 
-#define print_ip(ip) (ip) & 0xFF, ((ip) >> 8) & 0xFF, ((ip) >> 16) & 0xFF, ((ip) >> 24) & 0xFF
+#define pgnutls_error(func, rc) debug("error: %s: %s", func, gnutls_strerror(rc))
+#define dtls_handle_error(ssl, rc) _dtls_handle_error(ssl, rc, __FUNCTION__, \
+                                                      __LINE__)
 
-#define print_errno(fmt, ...) print("SYSCALL", fmt ": %s\n", ##__VA_ARGS__, strerror(errno))
-
-#define unimplemented print("FATAL", "%s is unimplemented!", __FUNCTION__)
-
-#define UNUSED __attribute__((unused))
+#define unimplemented print(LOG_LEVEL_FATAL, "%s is unimplemented!", __FUNCTION__)
 
 #endif

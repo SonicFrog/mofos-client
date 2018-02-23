@@ -1,4 +1,4 @@
-syntax = "proto2";
+syntax = "proto3";
 
 enum AuthResponseStatus {
     AUTH_UNKNOWN = 0;
@@ -39,8 +39,8 @@ message FSMessage {
 }
 
 message FSRequest {
-    required uint32 id = 1;
-    required FSReqRespType type = 3;
+    uint32 id = 1;
+    FSReqRespType type = 3;
 
     oneof request {
         FSReaddirRequest readdir = 4;
@@ -53,42 +53,43 @@ message FSRequest {
 }
 
 message FSReaddirRequest {
-    required string path = 10;
-    optional bool hidden = 11 [ default = false ];
-    optional uint32 limit = 12 [ default = 0 ];
-    optional uint32 offset = 13 [ default = 0 ];
+    string path = 10;
+    bool hidden = 11;
+
+    uint32 limit = 12;
+    uint32 offset = 13;
 }
 
 message FSReadRequest {
-    required string path = 20;
-    optional int64 offset = 21 [ default = 0 ];
-    required int64 size = 22;
+    string path = 20;
+    int64 offset = 21;
+    int64 size = 22;
 }
 
 message FSWriteRequest {
-    required string path = 30;
-    optional int64 offset = 31 [ default = 0 ];
-    required bytes data = 32;
+    string path = 30;
+    int64 offset = 31;
+    bytes data = 32;
 }
 
 message FSGetAttrRequest {
-    required string path = 40;
+    string path = 40;
 }
 
 message FSCreateRequest {
-    required string path = 50;
-    optional int32 flags = 51;
+    string path = 50;
+    int32 flags = 51;
 }
 
 message FSUnlinkRequest {
-    required string path = 60;
-    optional bool recursive = 91 [ default = false ];
+    string path = 60;
+	bool recursive = 91;
 }
 
 message FSResponse {
-    required uint32 id = 1;
-    optional FSResponseStatus status = 2 [ default = RESP_SUCCESS ];
-    required FSReqRespType type = 3;
+    uint32 id = 1;
+    FSResponseStatus status = 2;
+    FSReqRespType type = 3;
 
     oneof response {
         FSReadResponse read = 4;
@@ -109,31 +110,32 @@ message FSUnlinkResponse {
 }
 
 message FSReadResponse {
-    required int64 size = 50;
-    required int64 offset = 51;
-    required bytes content = 52;
+    int64 size = 50;
+    int64 offset = 51;
+    bytes content = 52;
 }
 
 message FSWriteResponse {
-    required int64 written = 10;
+    int64 written = 10;
 }
 
 message FSGetAttrResponse {
-    required FSFileInfo attr = 20;
+    FSFileInfo attr = 20;
 }
 
 message FSFileInfo {
-    required string name = 30;
-    required int64 size = 31;
-    required FSPermInfo perms = 32;
+    string name = 30;
+    int64 size = 31;
+    FSPermInfo perms = 32;
+    uint64 uid = 33;
 }
 
 message FSReaddirResponse {
-    repeated FSFileInfo files = 40;
+    FSFileInfo files = 40;
 }
 
 message FSPermInfo {
-     optional bool writtable = 1 [ default = true ];
-     optional bool readable = 2 [ default = true ];
-     optional bool executable = 3 [ default = true ];
+     bool writtable = 1;
+     bool readable = 2;
+     bool executable = 3;
 }

@@ -2,18 +2,12 @@ include_rules
 
 ifeq ($(CONFIG_TEST),y)
 
-CFLAGS += -g
-LDFLAGS += -lcunit
+LDFLAGS += -lcheck
 
-: foreach *.c | *.h ../config.h ../src/*.h |> !cc -I. -I.. -I../src |>
-: ../src/mofos.o ../src/ssl.o *.o |> !link |> mofos-test
+: foreach *.c | *.h ../build.h ../src/*.h |> !cc -I. -I.. -I../src |>
+: ../src/config.o ../src/gnutls.o ../src/util.o ../src/proto/*.o \
+  ../src/log.o *.o |> !link |> mofos-test
 
-: |> !genkey  |> server.key
-: server.key |> !decrypt_key |> %B.pem
-: server.pem |> !gencert |> server.crt
-: |> !genkey |> client.key
-: client.key |> !decrypt_key |> client.pem
-: client.pem |> !gencert |> client.crt
-: mofos-test | client.crt client.pem server.pem server.crt |> ./%f |>
+: mofos-test | |> ./%f |>
 
 endif

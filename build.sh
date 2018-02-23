@@ -8,12 +8,12 @@ for i in $@; do
 	case "$i" in
 		test)
 			tup variant $CONFIG_DIR/test.config
-			tup
+			tup build-test
 			;;
 
 		release)
 			tup variant $CONFIG_DIR/release.config
-			tup
+			tup build-release
 			;;
 
 		clean)

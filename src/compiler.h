@@ -1,6 +1,8 @@
 #ifndef __DEF_COMPILER_H
 #define __DEF_COMPILER_H
 
+#include "util.h"
+
 /*
  * compiler compat layer
  */
@@ -17,11 +19,10 @@
 #define __has_feature(x) 0
 #endif
 
-#if __has_attribute(unused)
-// compiler will spit out a gazillion errors but well...
-#define UNUSED __attribute__((unused))
+#if __has_attribute(nonnull)
+#define NON_NULL(...) __attribute__((nonnull (__VA_ARGS__)))
 #else
-#define UNUSED
+#define NON_NULL(...)
 #endif
 
 #if __has_attribute(always_inline)
@@ -29,6 +30,13 @@
 #else
 #define ALWAYS_INLINE inline
 #endif
+
+#define _cleanup_(f) __attribute__((cleanup(f)))
+#define _cleanup_free_ _cleanup_(free)
+#define _cleanup_close_ _cleanup_(closep)
+#define _deprecated_ __attribute__((deprecated))
+#define _pure_ __attribute__((pure))
+#define _const_ __attribute__((const))
 
 #if __has_builtin(__sync_bool_compare_and_swap)
 
@@ -41,7 +49,10 @@
 #define atomic_cmpswp_bool(ptr, old, new) (!!atomic_cmp_swp(ptr, old, new))
 
 #else
-#error You compiler needs either __sync_swap or __sync_bool_compare_and_swap
+
+#define atomic_cmpswp_bool(ptr, old, new) __sync_bool_compare_and_swap(ptr, old, new)
+#define atomic_cmpswp(ptr, old, new) __sync_val_compare_and_swap(ptr, old, new)
+
 #endif
 
 #endif

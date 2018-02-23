@@ -1,0 +1,286 @@
+
+src/args.h,168
+#define __DEF_ARGS_H2,21
+enum verbosity 4,43
+    NONE,5,60
+    NONE, DEBUG,5,60
+    NONE, DEBUG, RAW5,60
+struct mofos_args 8,85
+    enum verbosity verbose;9,105
+
+src/compiler.h,592
+#define __DEF_COMPILER_H2,25
+#define __has_attribute(11,127
+#define __has_builtin(15,186
+#define __has_feature(19,243
+#define unused 24,363
+#define unused26,408
+#define ALWAYS_INLINE 30,466
+#define ALWAYS_INLINE 32,532
+#define _cleanup_(35,569
+#define _cleanup_free_ 36,618
+#define _cleanup_close_ 37,657
+#define _deprecated_ 38,699
+#define _pure_ 39,748
+#define _const_ 40,785
+#define atomic_cmpswp_bool(44,874
+#define atomic_cmpswp(45,960
+#define atomic_cmp_swp(49,1095
+#define atomic_cmpswp_bool(50,1160
+#define atomic_cmpswp_bool(54,1244
+#define atomic_cmpswp(55,1330
+
+src/config.c,387
+struct mofos_config 7,82
+    bool verbose;8,104
+    bool encryption;9,122
+    char *mountpoint;mountpoint11,144
+    char *remote_host;remote_host12,166
+    int port;13,189
+const char* mofos_config_get_mountpoint(16,207
+const char* mofos_config_get_remote_host(20,312
+int mofos_config_get_port(24,419
+bool mofos_config_is_verbose(28,504
+bool mofos_config_is_encrypted(32,595
+
+src/config.h,31
+#define __MOFOS_CONFIG_H 2,25
+
+src/debug.h,537
+enum log_level 9,96
+    LOG_LEVEL_DEBUG 10,113
+    LOG_LEVEL_WARN 11,138
+    LOG_LEVEL_ERROR 12,162
+    LOG_LEVEL_FATAL 13,187
+static enum log_level global_level;16,217
+static ALWAYS_INLINE void set_log_level(18,254
+typedef int (*mofos_printer)mofos_printer23,341
+static void log_msg(25,406
+#define print(50,927
+#define warn(53,1069
+#define error(54,1134
+#define fatal(55,1201
+#define debug(58,1293
+#define debug(60,1366
+#define debug_multiprint(61,1390
+#define dtls_handle_error(64,1433
+#define unimplemented 67,1577
+
+src/gnutls.c,1559
+#define MOFOS_DEFAULT_MTU 17,273
+#define MOFOS_DEFAULT_KEY_SIZE 18,304
+struct mofos_dtls_params20,359
+    char* hostname;22,386
+    uint16_t port;23,406
+    struct addrinfo* local_addr;25,426
+    struct addrinfo* remote_addr;26,459
+    gnutls_datum_t psk;28,494
+    gnutls_session_t session;29,518
+    int socket;30,548
+    mofos_dtls_data_sender_t sender;32,565
+    mofos_dtls_loop_handler_t handler;33,602
+    void *user_data;user_data34,641
+struct mofos_dtls_server37,666
+    struct mofos_dtls_params *params;params39,693
+struct mofos_dtls_client42,735
+    struct mofos_dtls_params *params;params44,762
+pgnutls_error 48,816
+mofos_dtls_client_generate_psk(54,928
+mofos_dtls_server_set_data_handler(69,1242
+void mofos_dtls_server_set_data_sender(78,1483
+void mofos_dtls_server_set_user_data(87,1727
+mofos_dtls_params_init(96,1932
+mofos_dtls_params_free(112,2411
+mofos_dtls_params_new(121,2628
+    #define BUF_LEN 123,2692
+mofos_dtls_server_init_psk(144,3213
+mofos_dtls_client_recv(156,3422
+mofos_dtls_client_send(173,3852
+mofos_dtls_client_setup_transport(184,4178
+mofos_dtls_client_init_psk(192,4479
+mofos_dtls_rebind_socket(226,5390
+mofos_dtls_reconnect_socket(259,6188
+mofos_dtls_client_roam(266,6397
+mofos_dtls_server_roam(273,6533
+mofos_dtls_client_init(285,6803
+mofos_dtls_server_init(328,7810
+*mofos_dtls_server_new(mofos_dtls_server_new335,7976
+mofos_dtls_server_main_loop_run(353,8290
+mofos_dtls_address_describe(399,9702
+mofos_dtls_server_gnutls_describe(417,10178
+mofos_dtls_server_describe(482,12183
+
+src/gnutls.h,563
+#define __MOFOS_SSL_H2,22
+#define dtls_global_init 20,312
+#define dtls_global_free 21,356
+enum mofos_dtls_handler_status (*mofos_dtls_loop_handler_t)mofos_dtls_loop_handler_t27,464
+typedef int (*mofos_dtls_data_sender_t)mofos_dtls_data_sender_t31,691
+enum mofos_dtls_error35,858
+    MOFOS_DTLS_NO_ERROR 37,882
+    MOFOS_DTLS_TIMEOUT,38,911
+    MOFOS_DTLS_FATAL,39,935
+enum mofos_dtls_handler_status42,961
+    MOFOS_DTLS_HANDLER_OK 44,994
+    MOFOS_DTLS_HANDLER_EXIT,45,1046
+    MOFOS_DTLS_HANDLER_FATAL,46,1102
+    MOFOS_DTLS_HANDLER_ROAM 47,1165
+
+src/main.c,299
+#define CHECK(18,293
+#define MAX_BUF 20,328
+static const char* sig_name_str(22,350
+#define CASE_RETURN_STRING(26,416
+#undef CASE_RETURN_STRING31,616
+handle_signal(41,754
+signal_setup(63,1095
+usage(84,1507
+do_fuse(90,1621
+int main(109,2112
+int parse_args(121,2282
+#define IS_OPT(123,2354
+
+src/mofos.c,185
+mofos_open(23,392
+mofos_read(36,599
+mofos_readdir(50,935
+mofos_write(70,1331
+mofos_getattr(87,1749
+const struct fuse_operations fops 112,2194
+int mofos_client_main_loop(120,2370
+
+src/mofos.h,31
+#define FUSE_USE_VERSION 3,14
+
+src/network.c,117
+struct mofos_network_request_queuer10,118
+struct mofos_network_queue15,161
+int mofos_network_queue_request(20,195
+
+src/request.c,906
+#define INET6_MAX_MTU 10,141
+#define check_request(12,169
+#define check_response(15,256
+#define generate_case_check_type(18,344
+#define CHECK_AND_RETURN_PERR(25,589
+#define CHECK_AND_RETURN(31,792
+new_message(35,908
+unpack_and_check(55,1272
+mofos_free_message(107,2435
+#define mofos_new_request(117,2576
+#define mofos_new_response(118,2632
+int mofos_read_response_marshaler(120,2691
+int mofos_read_response_unmarshaler(135,3035
+int mofos_write_request_marshaler(157,3690
+int mofos_attr_response_unmarshaler(174,4128
+int mofos_attr_request_marshaler(192,4717
+int mofos_readdir_request_marshaler(202,4911
+int mofos_readdir_response_unmarshaler(218,5323
+FSMessage* mofos_message_from_bytes(228,5542
+FSMessage* mofos_message_from_fd(233,5669
+const struct mofos_request_marshaler mofos_request_marshaler 248,5982
+const struct mofos_response_unmarshaler mofos_response_unmarshaler 255,6127
+
+src/request.h,1720
+enum mofos_error 9,106
+    ERROR_NO_ERROR,10,125
+    ERROR_NO_PERMS,11,145
+    ERROR_NOTFOUND,12,165
+    ERROR_EOF,13,185
+    ERROR_EBIG,14,200
+    ERROR_OTHER,15,216
+typedef int (*read_marshaler)read_marshaler21,277
+typedef int (*read_unmarshaler)read_unmarshaler26,472
+typedef int (*write_marshaler)write_marshaler37,864
+typedef int (*write_unmarshaler)write_unmarshaler45,1224
+typedef int (*attr_marshaler)attr_marshaler51,1414
+typedef int (*attr_unmarshaler)attr_unmarshaler52,1480
+typedef int (*readdir_marshaler)readdir_marshaler57,1590
+typedef int (*readdir_unmarshaler)readdir_unmarshaler64,1905
+typedef int (*mofos_reader)mofos_reader71,2229
+struct mofos_request_marshaler 73,2303
+    read_marshaler read;74,2336
+    write_marshaler write;75,2361
+    attr_marshaler attr;76,2388
+    readdir_marshaler readdir;77,2413
+typedef int (*write_response_unmarshaler)write_response_unmarshaler80,2448
+typedef int (*read_response_unmarshaler)read_response_unmarshaler85,2700
+typedef int (*attr_response_unmarshaler)attr_response_unmarshaler93,3116
+typedef int (*readdir_response_unmarshaler)readdir_response_unmarshaler98,3368
+typedef int (*generic_response_unmarshaler)generic_response_unmarshaler103,3636
+typedef generic_response_unmarshaler unlink_response_unmarshaler;107,3838
+typedef generic_response_unmarshaler open_response_unmarshaler;108,3904
+struct mofos_response_unmarshaler 110,3969
+    read_response_unmarshaler read;111,4005
+    write_response_unmarshaler write;112,4041
+    attr_response_unmarshaler attr;113,4079
+    readdir_response_unmarshaler readdir;114,4115
+    unlink_response_unmarshaler unlink;115,4157
+    open_response_unmarshaler open;116,4197
+
+src/ssl.c,517
+#define TIMEOUT_VALUE 23,395
+hash_bytes(26,440
+dtls_generate_cookie(42,804
+dtls_cookie_verify(69,1263
+dtls_bio_read_Wrapper(76,1422
+dtls_bio_write_wrapper(82,1563
+int _dtls_handle_error(88,1708
+client_ssh_style_verification(120,2470
+int dtls_global_init(169,3699
+int dtls_init(182,3894
+int dtls_init_server(239,5160
+int dtls_init_client(293,6315
+dtls_data_sender(357,7821
+int dtls_server_loop(376,8174
+int dtls_client_connect(445,10078
+inline void dtls_global_free(465,10386
+void dtls_free(470,10446
+
+src/ssl.h,510
+#define CERTIFICATE_DIGEST 8,90
+    SUCCESS 11,142
+    TEMP_ERROR 12,159
+    PERM_ERROR 13,179
+    AGAIN 14,199
+    EXIT 15,214
+} handler_status_t;16,227
+struct dtls_params 18,248
+    SSL_CTX *ctx;ctx19,269
+    SSL *ssl;ssl20,287
+    BIO *bio;bio21,301
+    int sockfd;22,315
+    struct sockaddr_in laddr;23,331
+typedef int (*server_response_sender_t)server_response_sender_t26,365
+typedef handler_status_t (*server_loop_handler_t)server_loop_handler_t30,562
+#define ssl_print_error(36,952
+
+src/util.c,102
+list_init(42,1605
+list_insert(49,1690
+list_remove(58,1848
+list_empty(67,1997
+void closep(72,2069
+
+src/util.h,409
+#define __MOFOS_UTIL_H25,1259
+struct list 38,1528
+    struct list *prev;prev39,1542
+    struct list *next;next40,1565
+#define container_of(49,1776
+#define container_of(53,2003
+#define list_for_each(59,2205
+#define list_for_each_safe(64,2488
+strncpy_safe(75,3040
+zalloc(83,3186
+strdup_safe(96,3389
+snprintf_safe(111,3556
+#define sprintf_safe(126,3799
+asprintf_safe(131,3985
+xasprintf(149,4268
+
+src/utils,0
+
+src/Tupfile,0
+
+src/proto,0

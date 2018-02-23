@@ -1,4 +1,4 @@
 include_rules
 
-: foreach *.c | *.h proto/*.h ../config.h |> !cc -I. -I.. -Iproto |>
+: foreach *.c | *.h proto/*.h ../build.h |> !cc -I. -I.. -Iproto |>
 : *.o proto/*.o |> !link |> mofosc
